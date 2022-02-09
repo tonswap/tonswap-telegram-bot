@@ -1,4 +1,8 @@
-## Tonswap Telegram Bot 
+# Tonswap Telegram Bot 
+
+## Work in progress!
+
+> This project is still experimental and in an ongoing research phase.
 
 ## Telegram bot as user interface
 
