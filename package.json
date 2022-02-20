@@ -19,6 +19,7 @@
   "dependencies": {
     "bignumber.js": "^9.0.2",
     "telegraf": "^4.7.0",
-    "tonweb": "^0.0.28"
+    "tonweb": "^0.0.28",
+    "ts-node": "^10.5.0"
   }
 }

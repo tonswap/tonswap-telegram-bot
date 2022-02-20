@@ -1,3 +1,3 @@
 module.exports = {
-    'token': '<TELEGRAM_TOKEN>'
+    'token': '5167948839:AAHwuRRoVjlIPvVlLEz64Wqdk8Nc4iLrFZ8'
 }
