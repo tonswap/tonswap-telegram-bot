@@ -18,6 +18,10 @@ const bot = new Telegraf<MyContext>(require('./config').token);
 
 // ---------------- PERSISTENCE ------------------
 
+if (!fs.existsSync('../db.json')) {
+    fs.writeFileSync('../db.json', JSON.stringify({}));
+}
+
 class RedisStore implements SessionStore<any> {
 
     #store: any = require('../db.json');
