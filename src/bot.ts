@@ -119,6 +119,10 @@ const translations: any = {
         'EN': 'Wallet connected successfully 🎉',
         'RU': 'Кошелек успешно подключен 🎉'
     },
+    'WALLET_DISCONNECTED': {
+        'EN': 'Wallet disconnected.',
+        'RU': 'Кошелек отключен'
+    },
     buttons: {
         'BUY': {
             'EN': 'Buy XXX 💰',
@@ -444,7 +448,7 @@ bot.action('tokens', async (ctx: any) => {
 bot.action('disconnect', async (ctx: any) => {
     ctx.session.walletAddress = '';
     ctx.session.waitingForWalletAddress = true;
-    ctx.editMessageText(`Wallet disconnected. ${steps.disconnected.text(ctx)}`, steps.disconnected.buttons(ctx));
+    ctx.editMessageText(`${ctx.session.walletAddress ? translations.buttons.WALLET_DISCONNECTED[ctx.session.language] : ''} ${steps.disconnected.text(ctx)}`, steps.disconnected.buttons(ctx));
 });
 
 // ---------------- ON MESSAGE ------------------
