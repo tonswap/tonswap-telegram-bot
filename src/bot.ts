@@ -366,7 +366,7 @@ const steps = {
         buttons: (ctx: any) => {
             return Markup.inlineKeyboard(
                 [
-                    Markup.button.callback(translations.buttons.GOT_IT[ctx.session.language], 'disconnect'),
+                    Markup.button.callback(translations.buttons.GOT_IT[ctx.session.language], 'back_help_disconnected'),
                 ]
             );
         }
@@ -375,8 +375,19 @@ const steps = {
 
 // ---------------- ACTIONS ------------------
 
-bot.action('help_disconnected', async (ctx: any) => {
-    ctx.editMessageText(steps.helpDisconnected.text(ctx), steps.helpDisconnected.buttons(ctx));
+bot.action('back_help_disconnected', async (ctx: Context) => {
+    // @ts-ignore
+    await ctx.deleteMessage(ctx.update.callback_query.message.message_id);
+    await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
+});
+
+bot.action('help_disconnected', async (ctx: Context) => {
+    // @ts-ignore
+    await ctx.deleteMessage(ctx.update.callback_query.message.message_id);
+    await ctx.replyWithPhoto('https://i.ibb.co/D8Ddt33/image.png', {
+        ...steps.helpDisconnected.buttons(ctx),
+        caption: steps.helpDisconnected.text(ctx)
+    });
 });
 
 bot.action('languages', async (ctx: any) => {
