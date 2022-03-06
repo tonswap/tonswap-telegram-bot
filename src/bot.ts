@@ -19,8 +19,8 @@ const bot = new Telegraf<MyContext>(require('./config.ts').token);
 
 // ---------------- PERSISTENCE ------------------
 
-if (!fs.existsSync('../db.json')) {
-    fs.writeFileSync('../db.json', JSON.stringify({}));
+if (!fs.existsSync('./db.json')) {
+    fs.writeFileSync('./db.json', JSON.stringify({}));
 }
 
 class RedisStore implements SessionStore<any> {
@@ -29,7 +29,7 @@ class RedisStore implements SessionStore<any> {
 
     async delete(name: string): Promise<void> {
         delete this.#store[name];
-        fs.writeFileSync('../db.json', JSON.stringify(this.#store));
+        fs.writeFileSync('./db.json', JSON.stringify(this.#store));
     }
 
     async get(name: string): Promise<any> {
@@ -38,7 +38,7 @@ class RedisStore implements SessionStore<any> {
 
     async set(name: string, value: any): Promise<void> {
         this.#store[name] = value;
-        fs.writeFileSync('../db.json', JSON.stringify(this.#store));
+        fs.writeFileSync('./db.json', JSON.stringify(this.#store));
     }
 
 }
@@ -71,8 +71,8 @@ const translations: any = {
         'RU': 'Выберите токен для торговли'
     },
     'TOKEN': {
-        'EN': 'What would you like to do with XXX⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
-        'RU': 'Что бы вы хотели сделать с XXX⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+        'EN': 'What would you like to do with XXX ⠀⠀⠀⠀⠀⠀⠀',
+        'RU': 'Что бы вы хотели сделать с XXX ⠀⠀⠀⠀⠀⠀⠀',
     },
     'HELP_TOKENS': {
         'EN': 'To start trading on Tonswap you need to first select which token you want to trade. Tokens are normally traded against the native TON coin. After that, you will be able to do various actions such as buy, sell, add liquidity and claim rewards.',
@@ -104,8 +104,8 @@ const translations: any = {
         'RU': 'Вам нужно добавить ликвидность, прежде чем вы сможете ее удалить',
     },
     'LANGUAGES': {
-        'EN': 'You are currently using ${language} language',
-        'RU': 'Вы используете язык ${language}',
+        'EN': 'You are currently using XXX',
+        'RU': 'Вы используете язык XXX',
     },
     'DISCONNECTED': {
         'EN': 'Connect your TON wallet by pasting your TON wallet address',
@@ -231,7 +231,7 @@ const steps = {
     },
     helpTokens: {
         text: (ctx: any) => {
-            return prepareTranslation(translations.TOKEN[ctx.session.language]);
+            return prepareTranslation(translations.HELP_TOKENS[ctx.session.language]);
         },
         buttons: (ctx: any) => {
             return Markup.inlineKeyboard([
@@ -337,11 +337,11 @@ const steps = {
     languages: {
         text: (ctx: any) => {
             const language = languages.find(l => l.id === ctx.session.language)?.label;
-            return prepareTranslation(translations.NO_REWARDS[ctx.session.language], language);
+            return prepareTranslation(translations.LANGUAGES[ctx.session.language], language);
         },
         buttons: (ctx: any) => {
             const buttons = languages.filter(l => l.id !== ctx.session.language).map(l => Markup.button.callback(l.label, l.id))
-                .concat([Markup.button.callback(translations.buttons.BACK[ctx.session.language], 'tokens')]);
+                .concat([Markup.button.callback(translations.buttons.BACK[ctx.session.language], ctx.session.walletAddress ? 'tokens' : 'disconnect')]);
             return Markup.inlineKeyboard(buttons, {columns: 5});
         }
     },
@@ -352,6 +352,7 @@ const steps = {
         buttons: (ctx: any) => {
             return Markup.inlineKeyboard(
                 [
+                    Markup.button.callback(prepareTranslation(translations.buttons.LANGUAGES[ctx.session.language], languages.find(l => l.id === ctx.session.language)?.label), 'languages'),
                     Markup.button.callback(translations.buttons.HELP[ctx.session.language], 'help_disconnected')
                 ]
             );
@@ -450,8 +451,7 @@ bot.action('disconnect', async (ctx: any) => {
 
 bot.on('message', async (ctx) => {
     // set a default value
-    ctx.session ??= {walletAddress: "", waitingForWalletAddress: false};
-    ctx.session.language ??= 'EN';
+    ctx.session ??= {walletAddress: "", waitingForWalletAddress: false, language: 'EN'};
 
     if (ctx.session.waitingForWalletAddress) {
         ctx.session.walletAddress = (ctx.message as any).text;
