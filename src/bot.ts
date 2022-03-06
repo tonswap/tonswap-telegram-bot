@@ -347,8 +347,7 @@ const steps = {
     },
     disconnected: {
         text: (ctx: any) => {
-            const token = ctx.session.token.toUpperCase();
-            return prepareTranslation(translations.DISCONNECTED[ctx.session.language], token);
+            return prepareTranslation(translations.DISCONNECTED[ctx.session.language]);
         },
         buttons: (ctx: any) => {
             return Markup.inlineKeyboard(
