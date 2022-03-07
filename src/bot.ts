@@ -1,6 +1,7 @@
 import {Context, Markup, session, Telegraf} from 'telegraf'
 import {SessionStore} from "telegraf/src/session";
 import fs from "fs";
+const TonWeb = require('tonweb');
 
 interface SessionData {
     waitingForWalletAddress: boolean,
@@ -120,8 +121,12 @@ const translations: any = {
         'RU': 'Кошелек успешно подключен 🎉'
     },
     'WALLET_DISCONNECTED': {
-        'EN': 'Wallet disconnected.',
+        'EN': 'Wallet disconnected',
         'RU': 'Кошелек отключен'
+    },
+    'INVALID_ADDRESS': {
+        'EN': 'Invalid wallet address, please try again',
+        'RU': 'Неверный адрес кошелька. Повторите попытку.'
     },
     buttons: {
         'BUY': {
@@ -446,9 +451,9 @@ bot.action('tokens', async (ctx: any) => {
 });
 
 bot.action('disconnect', async (ctx: any) => {
+    ctx.editMessageText(`${ctx.session.walletAddress ? `${translations.WALLET_DISCONNECTED[ctx.session.language]}.` : ''} ${steps.disconnected.text(ctx)}`, steps.disconnected.buttons(ctx));
     ctx.session.walletAddress = '';
     ctx.session.waitingForWalletAddress = true;
-    ctx.editMessageText(`${ctx.session.walletAddress ? translations.buttons.WALLET_DISCONNECTED[ctx.session.language] : ''} ${steps.disconnected.text(ctx)}`, steps.disconnected.buttons(ctx));
 });
 
 // ---------------- ON MESSAGE ------------------
@@ -458,16 +463,22 @@ bot.on('message', async (ctx) => {
     ctx.session ??= {walletAddress: "", waitingForWalletAddress: false, language: 'EN'};
 
     if (ctx.session.waitingForWalletAddress) {
-        ctx.session.walletAddress = (ctx.message as any).text;
+        if (TonWeb.utils.Address.isValid((ctx.message as any).text)) {
+            ctx.session.walletAddress = (ctx.message as any).text;
+        }
     }
 
     if (ctx.session.walletAddress) {
         ctx.session.waitingForWalletAddress = false;
-        await ctx.reply('Wallet connected successfully 🎉');
+        await ctx.reply(translations.WALLET_CONNECTED[ctx.session.language!!]);
         await ctx.reply(steps.tokens.text(ctx), steps.tokens.buttons(ctx));
     } else {
-        ctx.session.waitingForWalletAddress = true;
-        await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
+        if (ctx.session.waitingForWalletAddress) {
+            await ctx.reply(translations.INVALID_ADDRESS[ctx.session.language!!]);
+        } else {
+            ctx.session.waitingForWalletAddress = true;
+            await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
+        }
     }
 });
 
