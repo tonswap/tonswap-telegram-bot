@@ -1,15 +1,24 @@
 import {Context, Markup, session, Telegraf} from 'telegraf'
 import {SessionStore} from "telegraf/src/session";
 import fs from "fs";
+import {Token} from "./tokens";
+import {Address} from "ton";
+
 const TonWeb = require('tonweb');
+const tokens = require('./tokens');
+const BN = require("bn.js");
+
+const TONSWAP_URL = 'https://tonswap.github.io/tonswap-web-new/';
+
+const tonweb = new TonWeb(
+    new TonWeb.HttpProvider("https://scalable-api.tonwhales.com/jsonRPC")
+);
 
 interface SessionData {
     waitingForWalletAddress: boolean,
     walletAddress: string,
     token?: string,
     language?: string,
-    showRewards?: boolean // Temp just to show it can look
-    showRemoveLiquidity?: boolean // Temp just to show it can look
 }
 
 interface MyContext extends Context {
@@ -75,6 +84,10 @@ const translations: any = {
         'EN': 'What would you like to do with XXX ⠀⠀⠀⠀⠀⠀⠀',
         'RU': 'Что бы вы хотели сделать с XXX ⠀⠀⠀⠀⠀⠀⠀',
     },
+    'TOKEN_TBD': {
+        'EN': 'XXX trading is coming soon!',
+        'RU': 'XXX, скоро начнутся торги!',
+    },
     'HELP_TOKENS': {
         'EN': 'To start trading on Tonswap you need to first select which token you want to trade. Tokens are normally traded against the native TON coin. After that, you will be able to do various actions such as buy, sell, add liquidity and claim rewards.',
         'RU': 'Чтобы начать торговать на Tonswap, сначала нужно выбрать токен. Токенами обычно торгуют против базовой монеты TON. После этого, вы сможете выполнять различные действия, такие как покупка, продажа, добавление ликвидности и получение вознаграждения.',
@@ -89,8 +102,8 @@ const translations: any = {
         'RU': 'Добавление ликвидности — это действие по предоставлению как XXX, так и TON, чтобы позволить другим обмениваться ими. За каждый своп вы будете получать комиссию в размере 0,3% + дополнительные вознаграждения в размере 88% годовых. Всегда существует риск непоправимой потери, поэтому рекомендуется узнать об этом до предоставления ликвидности. Удаление ликвидности — это действие по возврату XXX и TON, которые вы уже предоставили ранее',
     },
     'HAS_REWARDS': {
-        'EN': 'You earned 2.4 TON, tap to approve the claim rewards transaction in your TON wallet 🥳',
-        'RU': 'Вы заработали 2,4 TON, нажмите, чтобы одобрить транзакцию вознаграждения в вашем кошельке TON🥳',
+        'EN': 'You earned YYY XXX, tap to claim it 🥳',
+        'RU': 'Вы заработали YYY XXX, нажмите, чтобы получить 🥳',
     },
     'NO_REWARDS': {
         'EN': 'Liquidity providers can earn rewards of up to 88% APR (yearly interest). You must add liquidity by depositing both XXX and TON to earn rewards',
@@ -157,10 +170,6 @@ const translations: any = {
             'EN': 'Got it 👍',
             'RU': 'Ясно👍'
         },
-        'APPROVE': {
-            'EN': 'Approve 👍',
-            'RU': 'Подтвердить👍'
-        },
         'ADD_LIQUIDITY': {
             'EN': 'Add liquidity ➕',
             'RU': 'Добавить ликвидность ➕'
@@ -194,22 +203,24 @@ const steps = {
         },
         buttons: (ctx: any) => {
             return Markup.inlineKeyboard([
-                [
-                    Markup.button.callback('USDC', 'usdc'),
-                    Markup.button.callback('FODL', 'fodl'),
-                    Markup.button.callback('XRP', 'xrp'),
-                    Markup.button.callback('DOT', 'dot')
-                ],
-                [
-                    Markup.button.callback('BTC', 'btc'),
-                    Markup.button.callback('ETH', 'eth'),
-                    Markup.button.callback('LINK', 'link'),
-                    Markup.button.callback('FTM', 'dot')
-                ],
+                tokens.tokens.slice(0, 4).map((t: Token) => Markup.button.callback(t.displayName, t.name)),
+                tokens.tokens.slice(4, 8).map((t: Token) => Markup.button.callback(t.displayName, t.name)),
                 [
                     Markup.button.callback(translations.buttons.DISCONNECT[ctx.session.language], 'disconnect'),
                     Markup.button.callback(prepareTranslation(translations.buttons.LANGUAGES[ctx.session.language], languages.find(l => l.id === ctx.session.language)?.label), 'languages'),
                     Markup.button.callback(translations.buttons.HELP[ctx.session.language], 'help_tokens'),
+                ]
+            ]);
+        }
+    },
+    tbd: {
+        text: (ctx: any) => {
+            return prepareTranslation(translations.TOKEN_TBD[ctx.session.language], ctx.update.callback_query.data.toUpperCase());
+        },
+        buttons: (ctx: any) => {
+            return Markup.inlineKeyboard([
+                [
+                    Markup.button.callback(translations.buttons.GOT_IT[ctx.session.language], 'tokens'),
                 ]
             ]);
         }
@@ -223,8 +234,8 @@ const steps = {
             return Markup.inlineKeyboard(
                 [
                     [
-                        Markup.button.url(prepareTranslation(translations.buttons.BUY[ctx.session.language], token), 'https://ton.org'),
-                        Markup.button.url(prepareTranslation(translations.buttons.SELL[ctx.session.language], token), 'https://ton.org'),
+                        Markup.button.url(prepareTranslation(translations.buttons.BUY[ctx.session.language], token), `${TONSWAP_URL}buy/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
+                        Markup.button.url(prepareTranslation(translations.buttons.SELL[ctx.session.language], token), `${TONSWAP_URL}sell/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
                     ],
                     [
                         Markup.button.callback(translations.buttons.MANAGE_LIQUIDITY[ctx.session.language], 'manage_liquidity'),
@@ -277,14 +288,16 @@ const steps = {
         }
     },
     hasRewards: {
-        text: (ctx: any) => {
+        text: (ctx: any, rewards: number) => {
             const token = ctx.session.token.toUpperCase();
-            return prepareTranslation(translations.HAS_REWARDS[ctx.session.language], token);
+            const text = prepareTranslation(translations.HAS_REWARDS[ctx.session.language], token);
+            return text.replace('YYY', rewards.toString());
         },
         buttons: (ctx: any) => {
+            const token = ctx.session.token.toUpperCase();
             return Markup.inlineKeyboard([
                 [
-                    Markup.button.url(translations.buttons.APPROVE[ctx.session.language], 'https://ton.org'),
+                    Markup.button.url(translations.buttons.CLAIM_REWARDS[ctx.session.language], `${TONSWAP_URL}claim-rewards/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
                     Markup.button.callback(translations.buttons.BACK[ctx.session.language], ctx.session.token),
                 ]
             ]);
@@ -296,9 +309,10 @@ const steps = {
             return prepareTranslation(translations.NO_REWARDS[ctx.session.language], token);
         },
         buttons: (ctx: any) => {
+            const token = ctx.session.token.toUpperCase();
             return Markup.inlineKeyboard([
                 [
-                    Markup.button.url(translations.buttons.ADD_LIQUIDITY[ctx.session.language], 'https://ton.org'),
+                    Markup.button.url(translations.buttons.ADD_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}add-liquidity/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
                     Markup.button.callback(translations.buttons.BACK[ctx.session.language], ctx.session.token),
                 ]
             ]);
@@ -309,14 +323,15 @@ const steps = {
             const token = ctx.session.token.toUpperCase();
             return prepareTranslation(translations.MANAGE_LIQUIDITY[ctx.session.language], token);
         },
-        buttons: (ctx: any) => {
+        buttons: (ctx: any, hasLpBalance: boolean) => {
+            const token = ctx.session.token.toUpperCase();
             return Markup.inlineKeyboard(
                 [
                     [
-                        Markup.button.url(translations.buttons.ADD_LIQUIDITY[ctx.session.language], 'https://ton.org'),
-                        ctx.session.showRemoveLiquidity ?
-                            Markup.button.callback(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], 'remove_liquidity') :
-                            Markup.button.url(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], 'https://ton.org'),
+                        Markup.button.url(translations.buttons.ADD_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}add-liquidity/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
+                        hasLpBalance
+                            ? Markup.button.url(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}remove-liquidity/${token.toLowerCase()}?address=${ctx.session.walletAddress}`)
+                            : Markup.button.callback(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], 'remove_liquidity')
                     ],
                     [
                         Markup.button.callback(translations.buttons.CLAIM_REWARDS[ctx.session.language], 'claim_rewards'),
@@ -407,17 +422,25 @@ bot.action('remove_liquidity', async (ctx: any) => {
 });
 
 bot.action('manage_liquidity', async (ctx: any) => {
-    ctx.editMessageText(steps.manageLiquidity.text(ctx), steps.manageLiquidity.buttons(ctx));
-    ctx.session.showRemoveLiquidity = !ctx.session.showRemoveLiquidity;
+    const token = ctx.session.token.toUpperCase();
+    const address = ctx.session.walletAddress;
+    const amm = tokens.tokens.find((t: Token) => t.name === token.toLowerCase()).amm;
+    const lpBalance = await getTokenBalance(address, amm);
+
+    ctx.editMessageText(steps.manageLiquidity.text(ctx), steps.manageLiquidity.buttons(ctx, lpBalance > 0));
 });
 
 bot.action('claim_rewards', async (ctx: any) => {
-    if (ctx.session.showRewards) {
-        ctx.editMessageText(steps.hasRewards.text(ctx), steps.hasRewards.buttons(ctx));
+    const token = ctx.session.token.toUpperCase();
+    const address = ctx.session.walletAddress;
+    const amm = tokens.tokens.find((t: Token) => t.name === token.toLowerCase()).amm;
+    const rewards = await getRewards(address, amm);
+
+    if (rewards > 0) {
+        ctx.editMessageText(steps.hasRewards.text(ctx, rewards), steps.hasRewards.buttons(ctx));
     } else {
         ctx.editMessageText(steps.noRewards.text(ctx), steps.noRewards.buttons(ctx));
     }
-    ctx.session.showRewards = !ctx.session.showRewards;
 });
 
 bot.action('help_tokens', async (ctx: any) => {
@@ -432,9 +455,14 @@ bot.action('help_liquidity', async (ctx: any) => {
     ctx.editMessageText(steps.helpLiquidity.text(ctx), steps.helpLiquidity.buttons(ctx));
 });
 
-bot.action(['usdc', 'fodl', 'xrp', 'dot', 'btc', 'eth', 'link', 'dot'], async (ctx: any) => {
+bot.action('luna', async (ctx: any) => {
     ctx.session.token = ctx.update.callback_query.data;
     ctx.editMessageText(steps.token.text(ctx), steps.token.buttons(ctx));
+});
+
+bot.action(tokens.tokens.filter((t: Token) => t.name !== 'luna').map((t: Token) => t.name), async (ctx: any) => {
+    ctx.session.token = ctx.update.callback_query.data;
+    ctx.editMessageText(steps.tbd.text(ctx), steps.tbd.buttons(ctx));
 });
 
 bot.action(languages.map(l => l.id), async (ctx: any) => {
@@ -455,6 +483,54 @@ bot.action('disconnect', async (ctx: any) => {
     ctx.session.walletAddress = '';
     ctx.session.waitingForWalletAddress = true;
 });
+
+// ---------------- READ ----------------
+
+const parseNumber = (
+    num: any,
+    units: number = 9,
+    decimalPoints: number = 4
+): number => {
+    if (num.toString().length <= 9) {
+        return parseFloat(
+            parseFloat(
+                "0." + num.toString().padStart(units).replace(/\s/g, "0")
+            ).toFixed(decimalPoints)
+        );
+    } else {
+        return parseFloat(
+            parseFloat(
+                num.div(new BN(10 ** units)).toString() +
+                "." +
+                num.mod(new BN(10 ** units)).toString()
+            ).toFixed(decimalPoints)
+        );
+    }
+};
+
+const getTokenBalance = async (addressOfUser: string, amm: string) => {
+    const owner = Address.parse(addressOfUser);
+    let wc = owner.workChain;
+    let address = new BN(owner.hash);
+    const res = await tonweb.call(amm, "ibalance_of", [
+        ["num", wc.toString(10)],
+        ["num", address.toString(10)],
+    ]);
+
+    return parseNumber(new BN(eval(res.stack[0][1])));
+};
+
+const getRewards = async (addressOfUser: string, amm: string) => {
+    const owner = Address.parse(addressOfUser);
+    let wc = owner.workChain;
+    let address = new BN(owner.hash);
+    const res = await tonweb.call(amm, "get_rewards_of", [
+        ["num", wc.toString(10)],
+        ["num", address.toString(10)],
+    ]);
+
+    return parseNumber(new BN(eval(res.stack[0][1])), undefined, 10);
+};
 
 // ---------------- ON MESSAGE ------------------
 
