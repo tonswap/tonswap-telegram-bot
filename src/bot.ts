@@ -234,8 +234,8 @@ const steps = {
             return Markup.inlineKeyboard(
                 [
                     [
-                        Markup.button.url(prepareTranslation(translations.buttons.BUY[ctx.session.language], token), `${TONSWAP_URL}buy/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
-                        Markup.button.url(prepareTranslation(translations.buttons.SELL[ctx.session.language], token), `${TONSWAP_URL}sell/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
+                        Markup.button.url(prepareTranslation(translations.buttons.BUY[ctx.session.language], token), `${TONSWAP_URL}buy/${token.toLowerCase()}?telegram=true&address=${ctx.session.walletAddress}`),
+                        Markup.button.url(prepareTranslation(translations.buttons.SELL[ctx.session.language], token), `${TONSWAP_URL}sell/${token.toLowerCase()}?telegram=true&address=${ctx.session.walletAddress}`),
                     ],
                     [
                         Markup.button.callback(translations.buttons.MANAGE_LIQUIDITY[ctx.session.language], 'manage_liquidity'),
@@ -297,7 +297,7 @@ const steps = {
             const token = ctx.session.token.toUpperCase();
             return Markup.inlineKeyboard([
                 [
-                    Markup.button.url(translations.buttons.CLAIM_REWARDS[ctx.session.language], `${TONSWAP_URL}claim-rewards/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
+                    Markup.button.url(translations.buttons.CLAIM_REWARDS[ctx.session.language], `${TONSWAP_URL}claim-rewards/${token.toLowerCase()}?telegram=true&address=${ctx.session.walletAddress}`),
                     Markup.button.callback(translations.buttons.BACK[ctx.session.language], ctx.session.token),
                 ]
             ]);
@@ -312,7 +312,7 @@ const steps = {
             const token = ctx.session.token.toUpperCase();
             return Markup.inlineKeyboard([
                 [
-                    Markup.button.url(translations.buttons.ADD_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}add-liquidity/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
+                    Markup.button.url(translations.buttons.ADD_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}add-liquidity/${token.toLowerCase()}?telegram=true&address=${ctx.session.walletAddress}`),
                     Markup.button.callback(translations.buttons.BACK[ctx.session.language], ctx.session.token),
                 ]
             ]);
@@ -328,9 +328,9 @@ const steps = {
             return Markup.inlineKeyboard(
                 [
                     [
-                        Markup.button.url(translations.buttons.ADD_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}add-liquidity/${token.toLowerCase()}?address=${ctx.session.walletAddress}`),
+                        Markup.button.url(translations.buttons.ADD_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}add-liquidity/${token.toLowerCase()}?telegram=true&address=${ctx.session.walletAddress}`),
                         hasLpBalance
-                            ? Markup.button.url(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}remove-liquidity/${token.toLowerCase()}?address=${ctx.session.walletAddress}`)
+                            ? Markup.button.url(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}remove-liquidity/${token.toLowerCase()}?telegram=true&address=${ctx.session.walletAddress}`)
                             : Markup.button.callback(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], 'remove_liquidity')
                     ],
                     [
