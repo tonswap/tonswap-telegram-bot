@@ -58,9 +58,13 @@ bot.use(session({
     store: new RedisStore()
 }));
 
-// bot.start(async (ctx) => {
-//     await ctx.reply(`Hello, please enter your wallet address`);
-// });
+bot.start(async (ctx) => {
+    // set a default value
+    ctx.session ??= {walletAddress: "", waitingForWalletAddress: false, language: 'EN'};
+
+    ctx.session.waitingForWalletAddress = true;
+    await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
+});
 
 // ---------------- LANGUAGES ------------------
 
