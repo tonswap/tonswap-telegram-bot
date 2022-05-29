@@ -18,7 +18,7 @@
   "homepage": "https://github.com/tonswap/tonswap-telegram-bot#readme",
   "dependencies": {
     "bignumber.js": "^9.0.2",
-    "telegraf": "^4.7.0",
+    "telegraf": "^4.8.2",
     "ton": "^9.3.0",
     "tonweb": "^0.0.28",
     "ts-node": "^10.5.0"
