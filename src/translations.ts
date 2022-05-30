@@ -53,7 +53,7 @@ const translations: any = {
     "RU": "Кошелек отключен"
   },
   "INVALID_ADDRESS": {
-    "EN": "Invalid wallet address, please try again",
+    "EN": "Invalid password, please try again",
     "RU": "Неверный адрес кошелька. Повторите попытку."
   },
   "buttons": {

@@ -15,13 +15,14 @@ const TONSWAP_URL = 'https://tonswap.github.io/tonswap-web/';
 const tonweb = new TonWeb(
     new TonWeb.HttpProvider("https://scalable-api.tonwhales.com/jsonRPC")
 );
-
+const correctPassword = 'orbs123'
 interface SessionData {
-    waitingForWalletAddress: boolean,
+    waitingForPassword: boolean,
     walletAddress: string,
     token?: string,
     language?: string,
     walletBalance?: string; 
+    password?: string;
 }
 
 interface MyContext extends Context {
@@ -64,10 +65,10 @@ bot.use(session({
 bot.start(async (ctx) => {
     // set a default value
 
-    ctx.session ??= {walletAddress: "", waitingForWalletAddress: false, language: 'EN'};
+    ctx.session ??= {walletAddress: "", waitingForPassword: false, language: 'EN'};
 
-    ctx.session.waitingForWalletAddress = true;
-    await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
+    ctx.session.waitingForPassword = true;
+    await ctx.reply(steps.password.text(ctx));
 });
 
 // ---------------- LANGUAGES ------------------
@@ -93,6 +94,11 @@ const prepareTranslation = (translation: string, token?: string) => {
 };
 
 const steps = {
+    password: {
+        text: (ctx: any) => {
+            return 'enter password';
+        }
+    },
     tokens: {
         text: (ctx: any) => {
             return translations.TOKENS[ctx.session.language];
@@ -355,7 +361,7 @@ bot.action('tokens', async (ctx: any) => {
 bot.action('disconnect', async (ctx: any) => {
     ctx.editMessageText(`${ctx.session.walletAddress ? `${translations.WALLET_DISCONNECTED[ctx.session.language]}.` : ''} ${steps.disconnected.text(ctx)}`, steps.disconnected.buttons(ctx));
     ctx.session.walletAddress = '';
-    ctx.session.waitingForWalletAddress = true;
+    ctx.session.waitingForPassword = true;
 });
 
 // ---------------- READ ----------------
@@ -404,46 +410,22 @@ bot.on('message', async (ctx) => {
         console.log((ctx.message as any).text);
         
     // set a default value
-    ctx.session ??= {walletAddress: "", waitingForWalletAddress: false, language: 'EN'};
+    ctx.session ??= {walletAddress: "", waitingForPassword: false, language: 'EN'};
 
-    if (ctx.session.waitingForWalletAddress) {
-        if (TonWeb.utils.Address.isValid((ctx.message as any).text)) {
-            ctx.session.walletAddress = (ctx.message as any).text;
-            
-            try {
-                const balance = await tonweb.getBalance((ctx.message as any).text);
-                
-                ctx.session.walletBalance = balance
-            } catch (error) {
-                    console.log(error);
-                    
-            }
-        }
-    }
-
-    if (ctx.session.walletAddress) {
-
-        ctx.session.waitingForWalletAddress = false;
-        await ctx.reply(translations.WALLET_CONNECTED[ctx.session.language!!]);
-        await ctx.reply(steps.tokens.text(ctx), steps.tokens.buttons(ctx));
-    } else {
-        if (ctx.session.waitingForWalletAddress) {
-            await ctx.reply(translations.INVALID_ADDRESS[ctx.session.language!!]);
-        } else {
-            ctx.session.waitingForWalletAddress = true;
+    if (ctx.session.waitingForPassword) {
+        if((ctx.message as any).text !== correctPassword){
+         await ctx.reply(translations.INVALID_ADDRESS[ctx.session.language!!]);
+       
+        }else{
             await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
         }
+      
+        ctx.session.walletAddress = (ctx.message as any).text;
+            
     }
 });
 
-bot.on('poll', (ctx: any) => {
-    console.log(ctx);
-})
 
-
-bot.action('buy_click', (ctx: any) => {
-   ctx.re
-})
 
 
 // ---------------- BOT ------------------
