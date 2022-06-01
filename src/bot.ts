@@ -9,7 +9,7 @@ const TonWeb = require('tonweb');
 const tokens = require('./tokens');
 const BN = require("bn.js");
 
-const TONSWAP_URL = 'https://tonswap.github.io/tonswap-web/';
+const TONSWAP_URL = "https://tonswap.github.io/tonswap-web/";
 
 
 const tonweb = new TonWeb(
@@ -314,11 +314,11 @@ bot.action('remove_liquidity', async (ctx: any) => {
 
 bot.action('manage_liquidity', async (ctx: any) => {
     const token = ctx.session.token.toUpperCase();
-    const address = ctx.session.walletAddress;
-    const amm = tokens.tokens.find((t: Token) => t.name === token.toLowerCase()).amm;
-    const lpBalance = await getTokenBalance(address, amm);
+    // const address = ctx.session.walletAddress;
+    // const amm = tokens.tokens.find((t: Token) => t.name === token.toLowerCase()).amm;
+ //   const lpBalance = await getTokenBalance(address, amm);
 
-    ctx.editMessageText(steps.manageLiquidity.text(ctx), steps.manageLiquidity.buttons(ctx, lpBalance > 0));
+    ctx.editMessageText(steps.manageLiquidity.text(ctx), steps.manageLiquidity.buttons(ctx, true));
 });
 
 bot.action('help_tokens', async (ctx: any) => {
