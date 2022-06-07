@@ -9,7 +9,7 @@ const TonWeb = require('tonweb');
 const tokens = require('./tokens');
 const BN = require("bn.js");
 
-const TONSWAP_URL = "https://tonswap.github.io/tonswap-web/";
+const TONSWAP_URL = "https://0d66-77-137-37-74.ngrok.io/tonswap-web/";
 
 
 const tonweb = new TonWeb(
@@ -285,22 +285,6 @@ bot.action('languages', async (ctx: any) => {
 });
 
 
-bot.on('web_app_data', async (ctx: any) => {
-    console.log(ctx.update.message.web_app_data);
-    
-    // try {
-    //     ctx.reply(
-    //         '-',
-    //         Markup.inlineKeyboard([
-    //           Markup.button.webApp('Continue to your wallet 👛', ctx.update.message.web_app_data.data),
-    //         ])
-    //       )
-    // } catch (error) {
-    //         console.log(error);
-            
-    // }
-});
-
 
 
 bot.action('remove_liquidity', async (ctx: any) => {
@@ -335,7 +319,12 @@ bot.action('shib', async (ctx: any) => {
     ctx.editMessageText(steps.token.text(ctx), steps.token.buttons(ctx));
 });
 
-bot.action(tokens.tokens.filter((t: Token) => t.name !== 'shib').map((t: Token) => t.name), async (ctx: any) => {
+bot.action('usdt', async (ctx: any) => {
+    ctx.session.token = ctx.update.callback_query.data;
+    ctx.editMessageText(steps.token.text(ctx), steps.token.buttons(ctx));
+});
+
+bot.action(tokens.tokens.filter((t: Token) => (['shib', 'usdt'].includes(t.name))).map((t: Token) => t.name), async (ctx: any) => {
     ctx.session.token = ctx.update.callback_query.data;
     ctx.editMessageText(steps.tbd.text(ctx), steps.tbd.buttons(ctx));
 });
