@@ -102,6 +102,7 @@ const steps = {
             return Markup.inlineKeyboard([
                 tokens.tokens.slice(0, 4).map((t: Token) => Markup.button.callback(t.displayName, t.name)),
                 tokens.tokens.slice(4, 8).map((t: Token) => Markup.button.callback(t.displayName, t.name)),
+                [Markup.button.callback(translations.buttons.SELECT_CUSTOM_TOKEN[ctx.session.language], 'help_tokens')],
                 [
                     Markup.button.callback(prepareTranslation(translations.buttons.LANGUAGES[ctx.session.language], languages.find(l => l.id === ctx.session.language)?.label), 'languages'),
                     Markup.button.callback(translations.buttons.HELP[ctx.session.language], 'help_tokens'),
@@ -196,9 +197,7 @@ const steps = {
                         Markup.button.webApp(translations.buttons.ADD_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}add-liquidity/${token.toLowerCase()}?telegram_webapp=true`),
                     ],
                     [
-                        hasLpBalance
-                        ? Markup.button.webApp(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}remove-liquidity/${token.toLowerCase()}?telegram_webapp=true`)
-                        : Markup.button.callback(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], 'remove_liquidity')
+                         Markup.button.webApp(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}remove-liquidity/${token.toLowerCase()}?telegram_webapp=true`)   
                     ],
                     [
                         Markup.button.callback(translations.buttons.BACK[ctx.session.language], ctx.session.token),
@@ -269,7 +268,7 @@ const steps = {
 bot.action('back_help_disconnected', async (ctx: Context) => {
     // @ts-ignore
     await ctx.deleteMessage(ctx.update.callback_query.message.message_id);
-    await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
+    await ctx.reply(steps.tokens.text(ctx), steps.tokens.buttons(ctx));
 });
 
 bot.action('help_disconnected', async (ctx: Context) => {
@@ -343,11 +342,11 @@ bot.action('tokens', async (ctx: any) => {
     ctx.editMessageText(steps.tokens.text(ctx), steps.tokens.buttons(ctx));
 });
 
-bot.action('disconnect', async (ctx: any) => {
-    ctx.editMessageText(`${ctx.session.walletAddress ? `${translations.WALLET_DISCONNECTED[ctx.session.language]}.` : ''} ${steps.disconnected.text(ctx)}`, steps.disconnected.buttons(ctx));
-    ctx.session.walletAddress = '';
-    ctx.session.waitingForPassword = true;
-});
+// bot.action('disconnect', async (ctx: any) => {
+//     ctx.editMessageText(`${ctx.session.walletAddress ? `${translations.WALLET_DISCONNECTED[ctx.session.language]}.` : ''} ${steps.disconnected.text(ctx)}`, steps.disconnected.buttons(ctx));
+//     ctx.session.walletAddress = '';
+//     ctx.session.waitingForPassword = true;
+// });
 
 // ---------------- READ ----------------
 
@@ -394,20 +393,20 @@ const getTokenBalance = async (addressOfUser: string, amm: string) => {
 bot.on('message', async (ctx) => {
         console.log((ctx.message as any).text);
         
-    // set a default value
-    ctx.session ??= {walletAddress: "", waitingForPassword: false, language: 'EN'};
+    // // set a default value
+    // ctx.session ??= {walletAddress: "", waitingForPassword: false, language: 'EN'};
 
-    if (ctx.session.waitingForPassword) {
-        if((ctx.message as any).text !== correctPassword){
-         await ctx.reply(translations.INVALID_ADDRESS[ctx.session.language!!]);
+    // if (ctx.session.waitingForPassword) {
+    //     if((ctx.message as any).text !== correctPassword){
+    //      await ctx.reply(translations.INVALID_ADDRESS[ctx.session.language!!]);
        
-        }else{
-            await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
-        }
+    //     }else{
+    //         await ctx.reply(steps.disconnected.text(ctx), steps.disconnected.buttons(ctx));
+    //     }
       
-        ctx.session.walletAddress = (ctx.message as any).text;
+    //     ctx.session.walletAddress = (ctx.message as any).text;
             
-    }
+    // }
 });
 
 
