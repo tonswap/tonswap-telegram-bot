@@ -68,7 +68,7 @@ bot.start(async (ctx) => {
     ctx.session ??= {walletAddress: "", waitingForPassword: false, language: 'EN'};
 
     ctx.session.waitingForPassword = true;
-    await ctx.reply(steps.password.text(ctx));
+    await ctx.reply(steps.tokens.text(ctx), steps.tokens.buttons(ctx));
 });
 
 // ---------------- LANGUAGES ------------------
@@ -94,11 +94,6 @@ const prepareTranslation = (translation: string, token?: string) => {
 };
 
 const steps = {
-    password: {
-        text: (ctx: any) => {
-            return 'enter password';
-        }
-    },
     tokens: {
         text: (ctx: any) => {
             return translations.TOKENS[ctx.session.language];
@@ -335,12 +330,12 @@ bot.action('help_liquidity', async (ctx: any) => {
     ctx.editMessageText(steps.helpLiquidity.text(ctx), steps.helpLiquidity.buttons(ctx));
 });
 
-bot.action('luna', async (ctx: any) => {
+bot.action('shib', async (ctx: any) => {
     ctx.session.token = ctx.update.callback_query.data;
     ctx.editMessageText(steps.token.text(ctx), steps.token.buttons(ctx));
 });
 
-bot.action(tokens.tokens.filter((t: Token) => t.name !== 'luna').map((t: Token) => t.name), async (ctx: any) => {
+bot.action(tokens.tokens.filter((t: Token) => t.name !== 'shib').map((t: Token) => t.name), async (ctx: any) => {
     ctx.session.token = ctx.update.callback_query.data;
     ctx.editMessageText(steps.tbd.text(ctx), steps.tbd.buttons(ctx));
 });
