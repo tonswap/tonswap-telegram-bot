@@ -9,7 +9,7 @@ const TonWeb = require('tonweb');
 const tokens = require('./tokens');
 const BN = require("bn.js");
 
-const TONSWAP_URL = 'https://tonswap.github.io/tonswap-web/';
+const TONSWAP_URL = 'https://447e-77-137-37-74.ngrok.io/tonswap-web/';
 
 
 const tonweb = new TonWeb(
@@ -103,7 +103,6 @@ const steps = {
                 tokens.tokens.slice(0, 4).map((t: Token) => Markup.button.callback(t.displayName, t.name)),
                 tokens.tokens.slice(4, 8).map((t: Token) => Markup.button.callback(t.displayName, t.name)),
                 [
-                    Markup.button.callback(translations.buttons.DISCONNECT[ctx.session.language], 'disconnect'),
                     Markup.button.callback(prepareTranslation(translations.buttons.LANGUAGES[ctx.session.language], languages.find(l => l.id === ctx.session.language)?.label), 'languages'),
                     Markup.button.callback(translations.buttons.HELP[ctx.session.language], 'help_tokens'),
                 ]
@@ -143,7 +142,7 @@ const steps = {
                         Markup.button.callback(translations.buttons.HELP[ctx.session.language], 'help_token'),
                     ]
                 ]
-            );
+            )
         }
     },
     helpTokens: {
@@ -195,9 +194,11 @@ const steps = {
                 [
                     [
                         Markup.button.webApp(translations.buttons.ADD_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}add-liquidity/${token.toLowerCase()}?telegram_webapp=true`),
+                    ],
+                    [
                         hasLpBalance
-                            ? Markup.button.webApp(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}remove-liquidity/${token.toLowerCase()}?telegram_webapp=true`)
-                            : Markup.button.callback(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], 'remove_liquidity')
+                        ? Markup.button.webApp(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], `${TONSWAP_URL}remove-liquidity/${token.toLowerCase()}?telegram_webapp=true`)
+                        : Markup.button.callback(translations.buttons.REMOVE_LIQUIDITY[ctx.session.language], 'remove_liquidity')
                     ],
                     [
                         Markup.button.callback(translations.buttons.BACK[ctx.session.language], ctx.session.token),
