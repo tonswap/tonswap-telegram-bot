@@ -103,7 +103,6 @@ const steps = {
                 tokens.tokens.slice(0, 4).map((t: Token) => Markup.button.callback(t.displayName, t.name)),
                 tokens.tokens.slice(4, 8).map((t: Token) => Markup.button.callback(t.displayName, t.name)),
                 [
-                    Markup.button.callback(translations.buttons.DISCONNECT[ctx.session.language], 'disconnect'),
                     Markup.button.callback(prepareTranslation(translations.buttons.LANGUAGES[ctx.session.language], languages.find(l => l.id === ctx.session.language)?.label), 'languages'),
                     Markup.button.callback(translations.buttons.HELP[ctx.session.language], 'help_tokens'),
                 ]
