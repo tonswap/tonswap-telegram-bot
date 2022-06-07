@@ -9,7 +9,8 @@ const TonWeb = require('tonweb');
 const tokens = require('./tokens');
 const BN = require("bn.js");
 
-const TONSWAP_URL = 'https://447e-77-137-37-74.ngrok.io/tonswap-web/';
+
+const TONSWAP_URL = 'https://tonswap.github.io/tonswap-web/';
 
 
 const tonweb = new TonWeb(
