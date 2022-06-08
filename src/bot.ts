@@ -229,7 +229,7 @@ const steps = {
         },
         buttons: (ctx: any) => {
             const buttons = languages.filter(l => l.id !== ctx.session.language).map(l => Markup.button.callback(l.label, l.id))
-                .concat([Markup.button.callback(translations.buttons.BACK[ctx.session.language], ctx.session.walletAddress ? 'tokens' : 'disconnect')]);
+                .concat([Markup.button.callback(translations.buttons.BACK[ctx.session.language],  'tokens')]);
             return Markup.inlineKeyboard(buttons, {columns: 5});
         }
     },
